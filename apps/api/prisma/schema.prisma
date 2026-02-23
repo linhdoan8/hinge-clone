@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+enum Gender {
+  MAN
+  WOMAN
+  NON_BINARY
+  TRANSGENDER_MAN
+  TRANSGENDER_WOMAN
+  OTHER
+}
+
+enum GenderPreference {
+  MEN
+  WOMEN
+  EVERYONE
+}
+
+enum LikeTargetType {
+  PHOTO
+  PROMPT
+}
+
+enum LikeStatus {
+  PENDING
+  MATCHED
+  SKIPPED
+  EXPIRED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  GIF
+  SYSTEM
+}
+
+enum WeMet {
+  YES
+  NO
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  ACTIONED
+  DISMISSED
+}
+
+// ============================================================================
+// Models
+// ============================================================================
+
+model User {
+  id               String           @id @default(uuid())
+  email            String?          @unique
+  phone            String?          @unique
+  passwordHash     String?
+  firstName        String
+  lastName         String
+  birthday         DateTime?
+  gender           Gender?
+  genderPreference GenderPreference?
+  bio              String?
+  jobTitle         String?
+  company          String?
+  school           String?
+  hometown         String?
+  height           Int?
+  religion         String?
+  politics         String?
+  drinking         String?
+  smoking          String?
+  drugs            String?
+  familyPlans      String?
+  ethnicity        String?
+  latitude         Float?
+  longitude        Float?
+  isVerified       Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  isPaused         Boolean          @default(false)
+  profileComplete  Boolean          @default(false)
+  lastActiveAt     DateTime         @default(now())
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Relations
+  photos           Photo[]
+  prompts          Prompt[]
+  preference       Preference?
+  sentLikes        Like[]           @relation("SentLikes")
+  receivedLikes    Like[]           @relation("ReceivedLikes")
+  matchesAsUser1   Match[]          @relation("MatchUser1")
+  matchesAsUser2   Match[]          @relation("MatchUser2")
+  messages         Message[]
+  reactions        Reaction[]
+  reportsFiled     Report[]         @relation("ReportsFiled")
+  reportsReceived  Report[]         @relation("ReportsReceived")
+  blocksInitiated  Block[]          @relation("BlocksInitiated")
+  blocksReceived   Block[]          @relation("BlocksReceived")
+  notifications    Notification[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([gender])
+  @@index([isActive, isPaused, profileComplete])
+  @@index([latitude, longitude])
+  @@index([lastActiveAt])
+}
+
+model Photo {
+  id             String   @id @default(uuid())
+  userId         String
+  url            String
+  position       Int
+  isVerification Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, position])
+}
+
+model PromptTemplate {
+  id       String @id @default(uuid())
+  category String
+  text     String
+
+  prompts Prompt[]
+
+  @@index([category])
+}
+
+model Prompt {
+  id               String  @id @default(uuid())
+  userId           String
+  promptTemplateId String
+  answer           String
+  position         Int
+  voiceUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptTemplate PromptTemplate @relation(fields: [promptTemplateId], references: [id])
+
+  @@index([userId])
+  @@index([userId, position])
+  @@index([promptTemplateId])
+}
+
+model Preference {
+  id                    String  @id @default(uuid())
+  userId                String  @unique
+  ageMin                Int     @default(18)
+  ageMax                Int     @default(99)
+  distanceMax           Int     @default(25)
+  heightMin             Int?
+  heightMax             Int?
+  ethnicity             String?
+  religion              String?
+  politics              String?
+  drinking              String?
+  smoking               String?
+  familyPlans           String?
+  ethnicityDealbreaker  Boolean @default(false)
+  religionDealbreaker   Boolean @default(false)
+  politicsDealbreaker   Boolean @default(false)
+  drinkingDealbreaker   Boolean @default(false)
+  smokingDealbreaker    Boolean @default(false)
+  familyPlansDealbreaker Boolean @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Like {
+  id         String         @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  targetType LikeTargetType
+  targetId   String
+  comment    String?
+  isRose     Boolean        @default(false)
+  status     LikeStatus     @default(PENDING)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  fromUser User @relation("SentLikes", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("ReceivedLikes", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([toUserId, status])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Match {
+  id            String    @id @default(uuid())
+  user1Id       String
+  user2Id       String
+  matchedAt     DateTime  @default(now())
+  isActive      Boolean   @default(true)
+  weMet         WeMet?
+  weMetFeedback String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user1    User      @relation("MatchUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2    User      @relation("MatchUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([isActive])
+  @@index([matchedAt])
+}
+
+model Message {
+  id        String      @id @default(uuid())
+  matchId   String
+  senderId  String
+  content   String
+  type      MessageType @default(TEXT)
+  readAt    DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  match     Match      @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender    User       @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  @@index([matchId])
+  @@index([matchId, createdAt])
+  @@index([senderId])
+  @@index([readAt])
+}
+
+model Reaction {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model Report {
+  id             String       @id @default(uuid())
+  reporterId     String
+  reportedUserId String
+  category       String
+  description    String?
+  status         ReportStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  reporter     User @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([status])
+}
+
+model Block {
+  id            String   @id @default(uuid())
+  blockerId     String
+  blockedUserId String
+  createdAt     DateTime @default(now())
+
+  blocker     User @relation("BlocksInitiated", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedUser User @relation("BlocksReceived", fields: [blockedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedUserId])
+  @@index([blockerId])
+  @@index([blockedUserId])
+}
+
+model Notification {
+  id            String   @id @default(uuid())
+  userId        String
+  type          String
+  title         String
+  body          String
+  referenceType String?
+  referenceId   String?
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
