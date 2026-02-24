@@ -162,8 +162,9 @@ export default function OnboardingPage() {
         profileComplete: true,
       };
 
-      await api.patch('/users/me', payload);
-      updateProfile({ profileComplete: true });
+      const response = await api.patch('/users/me', payload);
+      const updatedUser = response.data?.data || response.data;
+      updateProfile({ ...updatedUser, profileComplete: true });
       toast.success('Profile complete! Start discovering.');
       router.push('/discover');
     } catch (error) {

@@ -209,9 +209,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, isAuthenticated: false, isLoading: false });
   },
   updateProfile: (updates) =>
-    set((state) => ({
-      user: state.user ? { ...state.user, ...updates } : null,
-    })),
+    set((state) => {
+      const updatedUser = state.user ? { ...state.user, ...updates } : null;
+      if (updatedUser && typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+      return { user: updatedUser };
+    }),
 }));
 
 export const useDiscoverStore = create<DiscoverState>((set) => ({
