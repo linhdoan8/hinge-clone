@@ -63,12 +63,28 @@ api.interceptors.response.use(
       }
     }
 
-    const responseData = error.response?.data as { error?: { message?: string }; message?: string } | undefined;
-    const message =
+    const responseData = error.response?.data as {
+      error?: { message?: string; details?: Record<string, string[]> };
+      message?: string;
+    } | undefined;
+
+    // Build a detailed message including field-level validation errors
+    let message =
       responseData?.error?.message ||
       responseData?.message ||
       error.message ||
       'An unexpected error occurred';
+
+    // Append field-level details if present (e.g. Zod validation errors)
+    const details = responseData?.error?.details;
+    if (details && typeof details === 'object') {
+      const fieldErrors = Object.entries(details)
+        .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+        .join('; ');
+      if (fieldErrors) {
+        message = fieldErrors;
+      }
+    }
 
     return Promise.reject(new Error(message));
   }
