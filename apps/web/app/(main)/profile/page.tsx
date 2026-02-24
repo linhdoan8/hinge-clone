@@ -15,7 +15,7 @@ import api from '@/lib/api';
 import { useAuthStore, type User as UserType, type Photo, type UserPrompt } from '@/lib/store';
 import {
   cn, getHeightDisplay, generatePlaceholderPhoto, generateAvatarUrl,
-  PROMPT_TEMPLATES, IDENTITY_OPTIONS,
+  PROMPT_TEMPLATES, IDENTITY_OPTIONS, formatEnumLabel,
 } from '@/lib/utils';
 
 export default function ProfilePage() {
@@ -348,11 +348,11 @@ export default function ProfilePage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               {[
-                user?.religion,
-                user?.politics,
-                user?.drinking && `Drinks: ${user.drinking}`,
-                user?.smoking && `Smokes: ${user.smoking}`,
-                user?.familyPlans,
+                user?.religion && formatEnumLabel(user.religion),
+                user?.politics && formatEnumLabel(user.politics),
+                user?.drinking && `Drinks: ${formatEnumLabel(user.drinking)}`,
+                user?.smoking && `Smokes: ${formatEnumLabel(user.smoking)}`,
+                user?.familyPlans && formatEnumLabel(user.familyPlans),
               ]
                 .filter(Boolean)
                 .map((badge, i) => (

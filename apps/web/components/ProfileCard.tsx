@@ -7,7 +7,7 @@ import {
   Heart, X, MapPin, Briefcase, GraduationCap, Ruler,
   ChevronUp, ChevronDown, MessageCircle, Sparkles, Star,
 } from 'lucide-react';
-import { cn, getHeightDisplay } from '@/lib/utils';
+import { cn, getHeightDisplay, formatEnumLabel } from '@/lib/utils';
 import type { DiscoverProfile } from '@/lib/store';
 
 interface ProfileCardProps {
@@ -65,10 +65,10 @@ export default function ProfileCard({
   };
 
   const badges = [
-    profile.religion,
-    profile.politics,
-    profile.drinking && `Drinking: ${profile.drinking}`,
-    profile.smoking && `Smoking: ${profile.smoking}`,
+    profile.religion && formatEnumLabel(profile.religion),
+    profile.politics && formatEnumLabel(profile.politics),
+    profile.drinking && `Drinking: ${formatEnumLabel(profile.drinking)}`,
+    profile.smoking && `Smoking: ${formatEnumLabel(profile.smoking)}`,
   ].filter(Boolean);
 
   return (

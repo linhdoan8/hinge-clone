@@ -258,16 +258,16 @@ export default function OnboardingPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {GENDER_OPTIONS.map((g) => (
                         <button
-                          key={g}
-                          onClick={() => updateData({ gender: g })}
+                          key={g.value}
+                          onClick={() => updateData({ gender: g.value })}
                           className={cn(
                             'px-4 py-3 rounded-xl border text-sm font-medium transition-all',
-                            data.gender === g
+                            data.gender === g.value
                               ? 'border-hinge-primary bg-hinge-primary/10 text-hinge-primary'
                               : 'border-hinge-border bg-hinge-surface text-hinge-text-secondary hover:border-hinge-primary/50'
                           )}
                         >
-                          {g}
+                          {g.label}
                         </button>
                       ))}
                     </div>
@@ -280,16 +280,16 @@ export default function OnboardingPage() {
                     <div className="grid grid-cols-3 gap-3">
                       {GENDER_PREFERENCE_OPTIONS.map((g) => (
                         <button
-                          key={g}
-                          onClick={() => updateData({ genderPreference: g })}
+                          key={g.value}
+                          onClick={() => updateData({ genderPreference: g.value })}
                           className={cn(
                             'px-4 py-3 rounded-xl border text-sm font-medium transition-all',
-                            data.genderPreference === g
+                            data.genderPreference === g.value
                               ? 'border-hinge-primary bg-hinge-primary/10 text-hinge-primary'
                               : 'border-hinge-border bg-hinge-surface text-hinge-text-secondary hover:border-hinge-primary/50'
                           )}
                         >
-                          {g}
+                          {g.label}
                         </button>
                       ))}
                     </div>
@@ -576,20 +576,20 @@ export default function OnboardingPage() {
                       <div className="flex flex-wrap gap-2">
                         {options.map((option) => (
                           <button
-                            key={option}
+                            key={option.value}
                             onClick={() =>
                               updateData({
-                                [key]: data[key as keyof OnboardingData] === option ? '' : option,
+                                [key]: data[key as keyof OnboardingData] === option.value ? '' : option.value,
                               } as Partial<OnboardingData>)
                             }
                             className={cn(
                               'px-3.5 py-2 rounded-full text-sm font-medium transition-all border',
-                              data[key as keyof OnboardingData] === option
+                              data[key as keyof OnboardingData] === option.value
                                 ? 'border-hinge-primary bg-hinge-primary/10 text-hinge-primary'
                                 : 'border-hinge-border bg-hinge-surface text-hinge-text-secondary hover:border-hinge-primary/50'
                             )}
                           >
-                            {option}
+                            {option.label}
                           </button>
                         ))}
                       </div>

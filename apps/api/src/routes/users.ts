@@ -185,14 +185,28 @@ router.get(
 
 /**
  * PATCH /users/me
- * Update profile fields.
+ * Update profile fields. Also accepts optional photos and prompts arrays
+ * for onboarding completion.
  */
 router.patch(
   "/me",
+  // Extract photos/prompts before validation strips them
+  (req: Request, _res: Response, next: NextFunction) => {
+    (req as Request & { _onboardingPhotos?: unknown[]; _onboardingPrompts?: unknown[]; _setProfileComplete?: boolean }).
+      _onboardingPhotos = Array.isArray(req.body.photos) ? req.body.photos : undefined;
+    (req as Request & { _onboardingPrompts?: unknown[] }).
+      _onboardingPrompts = Array.isArray(req.body.prompts) ? req.body.prompts : undefined;
+    (req as Request & { _setProfileComplete?: boolean }).
+      _setProfileComplete = req.body.profileComplete === true;
+    next();
+  },
   validate(profileUpdateSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const updateData: Record<string, unknown> = { ...req.body };
+      const onboardingPhotos = (req as Request & { _onboardingPhotos?: { url: string; position: number }[] })._onboardingPhotos;
+      const onboardingPrompts = (req as Request & { _onboardingPrompts?: { promptTemplateId: string; answer: string; position: number }[] })._onboardingPrompts;
+      const setProfileComplete = (req as Request & { _setProfileComplete?: boolean })._setProfileComplete;
 
       // Parse birthday string to Date if provided
       if (updateData.birthday && typeof updateData.birthday === "string") {
@@ -205,6 +219,46 @@ router.patch(
       }
       if (updateData.longitude !== undefined) {
         updateData.longitude = roundCoordinate(updateData.longitude as number);
+      }
+
+      // Handle onboarding photos (create from URLs)
+      if (onboardingPhotos && onboardingPhotos.length > 0) {
+        // Delete existing photos first to avoid duplicates
+        await prisma.photo.deleteMany({ where: { userId: req.userId! } });
+        for (const photo of onboardingPhotos) {
+          if (photo.url && photo.position) {
+            await prisma.photo.create({
+              data: {
+                userId: req.userId!,
+                url: photo.url,
+                position: photo.position,
+              },
+            });
+          }
+        }
+      }
+
+      // Handle onboarding prompts (create from template IDs + answers)
+      if (onboardingPrompts && onboardingPrompts.length > 0) {
+        // Delete existing prompts first to avoid duplicates
+        await prisma.prompt.deleteMany({ where: { userId: req.userId! } });
+        for (const prompt of onboardingPrompts) {
+          if (prompt.promptTemplateId && prompt.answer) {
+            await prisma.prompt.create({
+              data: {
+                userId: req.userId!,
+                promptTemplateId: prompt.promptTemplateId,
+                answer: prompt.answer,
+                position: prompt.position || 1,
+              },
+            });
+          }
+        }
+      }
+
+      // If onboarding explicitly sets profileComplete, include it
+      if (setProfileComplete) {
+        updateData.profileComplete = true;
       }
 
       const user = await prisma.user.update({
