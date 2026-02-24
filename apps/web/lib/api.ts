@@ -40,7 +40,9 @@ api.interceptors.response.use(
             refreshToken,
           });
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          const tokens = response.data.data?.tokens || response.data;
+          const accessToken = tokens.accessToken;
+          const newRefreshToken = tokens.refreshToken;
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('refreshToken', newRefreshToken);
 
@@ -61,8 +63,10 @@ api.interceptors.response.use(
       }
     }
 
+    const responseData = error.response?.data as { error?: { message?: string }; message?: string } | undefined;
     const message =
-      (error.response?.data as { message?: string })?.message ||
+      responseData?.error?.message ||
+      responseData?.message ||
       error.message ||
       'An unexpected error occurred';
 

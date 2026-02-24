@@ -108,7 +108,8 @@ export default function LikesPage() {
     setLoading(true);
     try {
       const response = await api.get('/likes/received');
-      const fetchedLikes = response.data.data || response.data;
+      const apiData = response.data.data || response.data;
+      const fetchedLikes = apiData.items || apiData;
       if (Array.isArray(fetchedLikes) && fetchedLikes.length > 0) {
         setLikes(fetchedLikes);
       } else {
@@ -130,7 +131,7 @@ export default function LikesPage() {
   const handleLikeBack = async (like: Like) => {
     setRespondingId(like.id);
     try {
-      await api.patch(`/likes/${like.id}/respond`, { action: 'LIKE' });
+      await api.patch(`/likes/${like.id}/respond`, { action: 'LIKE_BACK' });
       setMatchedUser({
         name: like.fromUser.firstName,
         photo: like.fromUser.photos[0]?.url,

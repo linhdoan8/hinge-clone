@@ -200,7 +200,8 @@ export default function MatchesPage() {
     setLoading(true);
     try {
       const response = await api.get('/matches');
-      const fetchedMatches = response.data.data || response.data;
+      const apiData = response.data.data || response.data;
+      const fetchedMatches = apiData.items || apiData;
       if (Array.isArray(fetchedMatches) && fetchedMatches.length > 0) {
         setMatches(fetchedMatches);
       } else {
@@ -217,7 +218,8 @@ export default function MatchesPage() {
     async (matchId: string) => {
       try {
         const response = await api.get(`/matches/${matchId}/messages`);
-        const fetchedMsgs = response.data.data || response.data;
+        const msgData = response.data.data || response.data;
+        const fetchedMsgs = msgData.items || msgData;
         if (Array.isArray(fetchedMsgs) && fetchedMsgs.length > 0) {
           setMessages(matchId, fetchedMsgs);
         } else if (DEMO_MESSAGES[matchId]) {

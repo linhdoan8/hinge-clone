@@ -81,8 +81,8 @@ export default function SignupPage() {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
-      const { user, accessToken, refreshToken } = response.data;
-      login(user, accessToken, refreshToken);
+      const { user, tokens } = response.data.data;
+      login(user, tokens.accessToken, tokens.refreshToken);
       toast.success('Account created! Let\'s set up your profile.');
       router.push('/onboarding');
     } catch (error) {

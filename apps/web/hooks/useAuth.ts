@@ -41,7 +41,7 @@ export function useAuth() {
 
       try {
         const response = await api.get('/users/me');
-        const freshUser = response.data;
+        const freshUser = response.data.data || response.data;
         setUser(freshUser);
         setAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(freshUser));
@@ -65,8 +65,8 @@ export function useAuth() {
   const login = useCallback(
     async (email: string, password: string) => {
       const response = await api.post('/auth/login', { email, password });
-      const { user: userData, accessToken, refreshToken } = response.data;
-      storeLogin(userData, accessToken, refreshToken);
+      const { user: userData, tokens } = response.data.data;
+      storeLogin(userData, tokens.accessToken, tokens.refreshToken);
       return userData;
     },
     [storeLogin]
@@ -80,8 +80,8 @@ export function useAuth() {
       password: string;
     }) => {
       const response = await api.post('/auth/signup', data);
-      const { user: userData, accessToken, refreshToken } = response.data;
-      storeLogin(userData, accessToken, refreshToken);
+      const { user: userData, tokens } = response.data.data;
+      storeLogin(userData, tokens.accessToken, tokens.refreshToken);
       return userData;
     },
     [storeLogin]
@@ -95,7 +95,7 @@ export function useAuth() {
   const refreshProfile = useCallback(async () => {
     try {
       const response = await api.get('/users/me');
-      const freshUser = response.data;
+      const freshUser = response.data.data || response.data;
       setUser(freshUser);
       localStorage.setItem('user', JSON.stringify(freshUser));
       return freshUser;

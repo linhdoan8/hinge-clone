@@ -167,10 +167,35 @@ export default function DiscoverPage() {
       const response = await api.get('/discover/feed', {
         params: { page: 1, limit: 10 },
       });
-      const fetchedProfiles = response.data.data || response.data;
-      if (Array.isArray(fetchedProfiles) && fetchedProfiles.length > 0) {
+      const apiData = response.data.data || response.data;
+      const cards = apiData.cards || apiData;
+      const fetchedProfiles = Array.isArray(cards)
+        ? cards.map((card: Record<string, unknown>) => {
+            const u = (card.user || card) as Record<string, unknown>;
+            return {
+              id: u.id,
+              firstName: u.firstName,
+              age: u.age,
+              location: u.hometown,
+              jobTitle: u.jobTitle,
+              company: u.company,
+              school: u.school,
+              height: u.height,
+              hometown: u.hometown,
+              religion: u.religion,
+              politics: u.politics,
+              drinking: u.drinking,
+              smoking: u.smoking,
+              photos: u.photos,
+              prompts: u.prompts,
+              isMostCompatible: card.isMostCompatible,
+              compatibilityScore: card.compatibilityScore,
+            };
+          })
+        : [];
+      if (fetchedProfiles.length > 0) {
         setProfiles(fetchedProfiles);
-        setHasMore(fetchedProfiles.length >= 10);
+        setHasMore(apiData.hasMore ?? fetchedProfiles.length >= 10);
       } else {
         // Use demo profiles if API returns empty
         setProfiles(DEMO_PROFILES);
@@ -212,7 +237,7 @@ export default function DiscoverPage() {
       });
 
       // Check if this resulted in a match
-      if (response.data?.isMatch) {
+      if (response.data?.data?.isMatch) {
         setMatchedUser({
           name: currentProfile.firstName,
           photo: currentProfile.photos[0]?.url,

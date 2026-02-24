@@ -8,9 +8,13 @@ interface AuthenticatedSocket extends Socket {
 }
 
 export function setupSocketIO(httpServer: HttpServer): Server {
+  const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
+    .split(",")
+    .map((o) => o.trim());
+
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+      origin: corsOrigins,
       methods: ["GET", "POST"],
       credentials: true,
     },

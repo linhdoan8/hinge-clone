@@ -32,6 +32,9 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
 const NODE_ENV = process.env.NODE_ENV || "development";
 
+// Parse CORS origins into array
+const corsOrigins = CORS_ORIGIN.split(",").map((o) => o.trim());
+
 // Ensure upload directory exists
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -49,7 +52,7 @@ app.use(
 
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin: corsOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

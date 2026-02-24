@@ -44,8 +44,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { user, accessToken, refreshToken } = response.data;
-      login(user, accessToken, refreshToken);
+      const { user, tokens } = response.data.data;
+      login(user, tokens.accessToken, tokens.refreshToken);
       toast.success(`Welcome back, ${user.firstName}!`);
 
       if (!user.profileComplete) {
